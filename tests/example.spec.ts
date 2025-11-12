@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { sum } from "firebase/firestore/lite";
+import { TIMEOUT } from "dns";
 
 test("charachterScreen", async ({ page }) => {
+  test.setTimeout(90000);
+
   await page.goto("https://hackthefuture.bignited.be/char-select");
   await page.waitForLoadState("domcontentloaded");
   const character = await page.locator("#male");
@@ -82,5 +84,73 @@ test("charachterScreen", async ({ page }) => {
   await page.waitForLoadState("domcontentloaded");
 
   // SUBMARINE
-  const arrow = await page.getByAltText("Instruction Image");
+
+  for (let i = 0; i < 10; i++) {
+    const arrowImgString = await page
+      .getByAltText("Instruction Image")
+      .getAttribute("src");
+    const directionPng = arrowImgString?.split("/").pop();
+    if (directionPng?.includes("left")) {
+      await page.keyboard.press("ArrowLeft");
+    }
+    if (directionPng?.includes("right")) {
+      await page.keyboard.press("ArrowRight");
+    }
+    if (directionPng?.includes("up")) {
+      await page.keyboard.press("ArrowUp");
+    }
+    await page.waitForTimeout(500);
+  }
+
+  await page.waitForURL("**/crash", { waitUntil: "load" });
+  const exit = await page.locator(".square").click({ clickCount: 2 });
+
+  for (let i = 0; i <= 4; i++) {
+    for (let j = 0; j <= 5; j++) {
+      const path = await page.locator(`#square-${i}`).hover();
+    }
+    const crystal = page.locator(".glowing");
+
+    if (await crystal.isVisible()) {
+      const path = await page.locator(`#square-${i}`).click({ clickCount: 4 });
+      break;
+    }
+  }
+
+  // PUZZLE
+  const targetSlots = page.locator("#word-target .target-slot");
+  const draggableCubes = page.locator(
+    "#draggable-cubes-container .draggable-cube"
+  );
+
+  const targetWord = "ATLANTIS";
+
+  for (let i = 0; i < targetWord.length; i++) {
+    const letter = targetWord[i];
+    const cube = draggableCubes.filter({ hasText: letter }).first();
+    const slot = targetSlots.nth(i);
+    await cube.dragTo(slot);
+  }
+
+  await page.locator(".crystal-outside").click();
+  await page.locator("#crystal").click();
+  await page.locator(".crystal-outside").click();
+  const crystalButton = page.locator(".crystal-inside");
+  await crystalButton.hover();
+  await crystalButton.dispatchEvent("mousedown");
+
+  // Wait until loading bar is full
+  const loadingBar = page.locator(".loading-bar");
+  await page.waitForFunction(
+    () => {
+      const bar = document.querySelector(".loading-bar") as HTMLElement;
+      return bar && parseFloat(bar.style.width) >= 100;
+    },
+    { timeout: 15000 }
+  );
+
+  await crystalButton.dispatchEvent("mouseup");
+
+  await page.waitForURL("**/boss  ", { waitUntil: "load" });
+  await page.keyboard.press("Enter");
 });
