@@ -139,7 +139,6 @@ test("charachterScreen", async ({ page }) => {
   await crystalButton.hover();
   await crystalButton.dispatchEvent("mousedown");
 
-  // Wait until loading bar is full
   const loadingBar = page.locator(".loading-bar");
   await page.waitForFunction(
     () => {
@@ -151,6 +150,25 @@ test("charachterScreen", async ({ page }) => {
 
   await crystalButton.dispatchEvent("mouseup");
 
-  await page.waitForURL("**/boss  ", { waitUntil: "load" });
+  await page.waitForURL("**/boss", { waitUntil: "load" });
   await page.keyboard.press("Enter");
+
+  await page.keyboard.down("ArrowRight");
+
+  const startRight = Date.now();
+  while (Date.now() - startRight < 5000) {
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(200);
+  }
+
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.down("ArrowLeft");
+
+  const startLeft = Date.now();
+  while (Date.now() - startLeft < 5000) {
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(200);
+  }
+
+  await page.keyboard.up("ArrowLeft");
 });
